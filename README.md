@@ -1,4 +1,5 @@
-# TradingBot
+# TradingHelper
+
 This is a software that will give you advice for trading on bitcoin
 
 
