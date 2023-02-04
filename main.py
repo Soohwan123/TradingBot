@@ -3,6 +3,8 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
 import bitcoin_price
+import globalVariables
+
 
 
 print("This app is recommendedly used by traders who are familiar with Eliot's wave theory and have no self-control.")
@@ -22,20 +24,30 @@ plt.ion()
 plt.show()
 
 # Add the button to the plot
-
+userDrawnLines = []
 lines = []
 texts = []
+points = []
 abcButton_ax = plt.axes([0.05, 0.9, 0.1, 0.075])
 abcButton = widgets.Button(abcButton_ax, 'Analyze ABC')
 
-clearButton_ax = plt.axes([0.05, 0.7, 0.1, 0.075])
+clearButton_ax = plt.axes([0.85, 0.75, 0.1, 0.075])
 clearButton = widgets.Button(clearButton_ax, 'Clear')
 
 
 def on_abcButton_clicked(event):
-    xy = plt.ginput(2)
-    startPointOfA = xy[0][1]
-    endPointOfA = xy[1][1]
+    global points    
+    while len(points) < 2:
+        globalVariables.UPDATEGRAPHFLAG = False
+        points.append(plt.ginput(1)[0])
+        if len(points) == 2:
+            line = ax1.plot([points[0][0], points[1][0]], [points[0][1], points[1][1]])
+            userDrawnLines.append(line)
+
+
+    globalVariables.UPDATEGRAPHFLAG = True
+    startPointOfA = points[0][1]
+    endPointOfA = points[1][1]
 
     threeEightTwoResult = abc_pattern_methods.AbcPatternMethods.Get_382_In_B_Wave(startPointOfA, endPointOfA)
     fiveResult = abc_pattern_methods.AbcPatternMethods.Get_5_In_B_Wave(startPointOfA, endPointOfA)
@@ -58,19 +70,22 @@ def on_abcButton_clicked(event):
     plt.draw()
 
 def on_clearButton_clicked(event):
-    for line in lines:
-        line.remove()
-    lines.clear()
-
+    for line in userDrawnLines:
+        for line_obj in line:
+            line_obj.remove()
     for text in texts:
         text.remove()
+    for line in lines:
+        line.remove()    
+
+    lines.clear()
     texts.clear()
     plt.draw()
 
 clearButton.on_clicked(on_clearButton_clicked)
 abcButton.on_clicked(on_abcButton_clicked)
 
-while True:
+while globalVariables.UPDATEGRAPHFLAG:
     bitcoin_price.BitcoinPrice.update(0, price_list, time_list, volume_list, ax1, fig, plt)
     # limit update to every 5 minutes
     plt.draw()
